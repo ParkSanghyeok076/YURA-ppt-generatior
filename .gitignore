@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+venv/
+.omc/
+test_input.docx
+test_output.pptx
