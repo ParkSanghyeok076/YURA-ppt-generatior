@@ -5,8 +5,17 @@ echo   PPT Auto Generator
 echo ============================================
 echo.
 
+if not exist "venv" goto :novenv
 call venv\Scripts\activate.bat 2>nul
+goto :checkargs
 
+:novenv
+echo [Error] Virtual environment not found.
+echo   Run setup.bat first.
+pause
+exit /b 1
+
+:checkargs
 if "%~1"=="" goto :noinput
 set INPUT_FILE=%~1
 goto :run

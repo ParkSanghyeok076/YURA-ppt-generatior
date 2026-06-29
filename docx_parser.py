@@ -3,6 +3,8 @@ Word 양식(.docx) 파서
 [키워드]: 값 형식의 문서를 슬라이드 단위 딕셔너리 리스트로 변환
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 from docx import Document
 

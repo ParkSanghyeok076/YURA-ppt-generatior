@@ -3,6 +3,8 @@ PPT 생성 엔진
 파싱된 슬라이드 데이터를 회사 표준 템플릿 기반 .pptx로 변환
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from pptx import Presentation
@@ -243,8 +245,17 @@ def _add_textbox(
     tf.word_wrap = True
 
     if vertical_anchor is not None:
-        tf.paragraphs[0].alignment = alignment
-        txBox.text_frame.auto_size = None
+        tf.auto_size = None
+        tf.word_wrap = True
+        from pptx.oxml.ns import qn
+        txBody = tf._txBody
+        bodyPr = txBody.find(qn("a:bodyPr"))
+        anchor_map = {
+            MSO_ANCHOR.TOP: "t",
+            MSO_ANCHOR.MIDDLE: "ctr",
+            MSO_ANCHOR.BOTTOM: "b",
+        }
+        bodyPr.set("anchor", anchor_map.get(vertical_anchor, "t"))
 
     para = tf.paragraphs[0]
     para.text = text
@@ -257,9 +268,6 @@ def _add_textbox(
     run.font.size = font_size
     run.font.bold = bold
     run.font.color.rgb = RGBColor(*font_color)
-
-    if vertical_anchor is not None:
-        tf.paragraphs[0].alignment = alignment
 
 
 def _add_bullet_textbox(
