@@ -2,5 +2,7 @@ __pycache__/
 *.pyc
 venv/
 .omc/
+.DS_Store
 test_input.docx
+test_input.pptx
 test_output.pptx
