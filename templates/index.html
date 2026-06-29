@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPT Auto Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: '맑은 고딕', 'Malgun Gothic', sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            padding: 48px 40px;
+            width: 560px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus {
+            border-color: #4a90d9;
+        }
+        input[type="text"]::placeholder {
+            color: #bbb;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary {
+            background: #4a90d9;
+            color: #fff;
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+        }
+        .btn-primary:hover { background: #3a7bc8; }
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 24px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none;
+        }
+        .result.success {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            color: #2e7d32;
+            display: block;
+        }
+        .result.error {
+            background: #fce4ec;
+            border: 1px solid #ef9a9a;
+            color: #c62828;
+            display: block;
+        }
+        .result.loading {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            color: #1565c0;
+            display: block;
+        }
+        .info {
+            margin-top: 32px;
+            padding: 16px 20px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .info h3 {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .info pre {
+            font-size: 12px;
+            color: #555;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            font-family: 'Consolas', '맑은 고딕', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PPT Auto Generator</h1>
+        <p class="subtitle">Word 양식 파일 경로를 입력하면 PPT 초안이 자동 생성됩니다.</p>
+
+        <label for="filepath">Word 파일 경로 (.docx)</label>
+        <div class="input-group">
+            <input type="text" id="filepath"
+                   placeholder="예: C:\Users\홍길동\Documents\강의안.docx"
+                   autocomplete="off">
+        </div>
+
+        <button class="btn btn-primary" id="generateBtn" onclick="generate()">
+            PPT 생성
+        </button>
+
+        <div class="result" id="result"></div>
+
+        <div class="info">
+            <h3>Word 양식 작성 방법</h3>
+            <pre>[슬라이드 타입]: 커버
+[제목]: 강의 제목
+[부제목]: 소속/이름
+
+[슬라이드 타입]: 섹션헤더
+[제목]: 첫 번째 섹션 제목
+
+[슬라이드 타입]: 본문
+[소제목]: 1. 소제목
+[내용]:
+- 내용 1
+- 내용 2
+- 내용 3</pre>
+        </div>
+    </div>
+
+    <script>
+        // Enter 키로 생성 실행
+        document.getElementById('filepath').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') generate();
+        });
+
+        // 페이지 로드 시 입력창 포커스
+        window.onload = function() {
+            document.getElementById('filepath').focus();
+        };
+
+        function generate() {
+            const filepath = document.getElementById('filepath').value.trim();
+            const resultDiv = document.getElementById('result');
+            const btn = document.getElementById('generateBtn');
+
+            if (!filepath) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Word 파일 경로를 입력하세요.';
+                return;
+            }
+
+            if (!filepath.toLowerCase().endsWith('.docx')) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '.docx 파일만 지원됩니다.';
+                return;
+            }
+
+            // 로딩 상태
+            btn.disabled = true;
+            btn.textContent = '생성 중...';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'PPT를 생성하고 있습니다. 잠시만 기다려주세요...';
+
+            fetch('/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filepath: filepath })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.textContent = 'PPT 생성';
+
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML =
+                        '<strong>PPT 생성 완료!</strong><br>' +
+                        '저장 위치: ' + data.output_path + '<br>' +
+                        '슬라이드: ' + data.summary;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = data.error;
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.textContent = 'PPT 생성';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '서버 연결 오류: ' + err.message;
+            });
+        }
+    </script>
+</body>
+</html>
